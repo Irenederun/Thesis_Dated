@@ -1,5 +1,5 @@
-# FILL IN INFO ABOUT YOUR GAME HERE. 
+# Thesis. 
 
-DO NOT LEAVE IT LIKE THIS!!!
+Thesis
 
-Please? Please, give me content. I'm begging you. It's not that hard. Thanks.
+Thesis
