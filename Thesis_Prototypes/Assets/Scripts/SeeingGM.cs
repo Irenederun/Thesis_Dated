@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Fungus;
 using Unity.Mathematics;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -25,6 +26,11 @@ public class SeeingGM : MonoBehaviour
     public GameObject shore;
     public float shoreSpeed;
 
+    private bool canMoveBodies = false;
+    public bool bodyIsOnStage = false;
+
+    public Flowchart convo;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -34,6 +40,7 @@ public class SeeingGM : MonoBehaviour
         EnterCharacter();
         isInsideTrigger = true;
         boat.GetComponent<BoatMovement>().TrackCharacterStatus(true);
+        convo = player.GetComponent<Flowchart>();
     }
 
     // Update is called once per frame
@@ -58,7 +65,12 @@ public class SeeingGM : MonoBehaviour
             }
         }
 
-        if (isInCharacter && listOfBodies.Count > 0)
+        //if (isInCharacter && listOfBodies.Count > 0)
+        //{
+        //    BodiesMovement();
+        //}
+
+        if (canMoveBodies)
         {
             BodiesMovement();
         }
@@ -80,16 +92,20 @@ public class SeeingGM : MonoBehaviour
         {
             GameObject body = listOfBodies[i];
             bodySpeed = Random.Range(bodySpeedRange.x, bodySpeedRange.y);
-            body.GetComponent<Rigidbody>().AddForce(Vector3.left * bodySpeed);
-            body.GetComponent<Rigidbody>().velocity *= 0.996f;
+            //body.GetComponent<Rigidbody>().AddForce(Vector3.left * bodySpeed);
+            //body.GetComponent<Rigidbody>().velocity *= 0.996f;
 
+            body.transform.position += Vector3.left * bodySpeed * Time.deltaTime;
+            
             if (body.transform.position.y < lowerBound)
             {
                 listOfBodies.Remove(body);
+                bodyIsOnStage = false;
                 Destroy(body);
                 if (!noMoreSpawning)
                 {
-                    CreateNewBody();
+                    //CreateNewBody();
+                    Debug.Log("Time For New");
                 }
             }
         }
@@ -102,11 +118,13 @@ public class SeeingGM : MonoBehaviour
             GameObject body = listOfBodies[i];
             if (body.transform.position.y < lowerBound)
             {
+                bodyIsOnStage = false;
                 listOfBodies.Remove(body);
                 Destroy(body);
                 if (!noMoreSpawning)
                 {
-                    CreateNewBody();
+                    //CreateNewBody();
+                    print("time for new");
                 }
                 playerCtrl.ChangePaddleStatus(true);
             }
@@ -127,8 +145,28 @@ public class SeeingGM : MonoBehaviour
         inCharacter2D.SetActive(true);
         playerCtrl.backToOriginalPos();
         outCharacter3D.SetActive(false);
+
+        if (playerCtrl.currentState != PlayerController.GameState.tutorial)
+        {
+            canMoveBodies = true;
+            playerCtrl.currentState = PlayerController.GameState.interval;
+            StartCoroutine(FirstHitConvo());
+        }
     }
 
+    private IEnumerator FirstHitConvo()
+    {
+        yield return new WaitForSeconds(1);
+        if (bodyIsOnStage)
+        {
+            convo.SendFungusMessage("OnStage");
+        }
+        else
+        {
+            convo.SendFungusMessage("OffStage");
+        }
+    }
+    
     public void ExitCharacter()
     {
         outCharacter3D.SetActive(true);
@@ -164,5 +202,23 @@ public class SeeingGM : MonoBehaviour
             //shore.GetComponent<Rigidbody>().AddForce(Vector3.left * shoreSpeed);
             shore.transform.position += Vector3.left * Time.deltaTime;
         }
+    }
+
+    public void FirstWaveOfBody()
+    {
+        foreach (GameObject body in listOfBodies)
+        {
+            if (!body.activeSelf)
+            {
+                body.SetActive(true);
+                bodyIsOnStage = true;
+                canMoveBodies = true;
+            }
+        }
+    }
+
+    public void CanMoveBody()
+    {
+        canMoveBodies = false;
     }
 }

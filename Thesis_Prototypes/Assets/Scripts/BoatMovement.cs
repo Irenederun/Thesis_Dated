@@ -8,6 +8,7 @@ public class BoatMovement : MonoBehaviour
 {
     public GameObject camera2D;
     public GameObject player;
+    public GameObject gameManager;
     private bool canShakeScreen;
 
     // Start is called before the first frame update
@@ -26,10 +27,17 @@ public class BoatMovement : MonoBehaviour
     {
         if (collision.gameObject.tag == "body")
         {
+            gameManager.GetComponent<SeeingGM>().CanMoveBody();
+            
             if (canShakeScreen)
             {
                 camera2D.GetComponent<CameraShakeScreen>().ShakeScreen();
                 player.GetComponent<PlayerController>().ChangePaddleStatus(false);
+            }
+
+            if (!player.GetComponent<PlayerController>().hasCollided)
+            {
+                player.GetComponent<PlayerController>().hasCollided = true;
             }
         }
         

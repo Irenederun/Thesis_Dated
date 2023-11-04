@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Fungus;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEditor;
@@ -22,6 +23,25 @@ public class PlayerController : MonoBehaviour
     private float paddleTime;
     public float maxPaddleTime = 3;
     private bool shoreTime;
+    private bool canTalk;
+    
+    private bool hasPaddled = false;
+    private bool hasTalked = false;
+    
+    public Flowchart convo;
+    public bool hasCollided = false;
+        
+    public enum GameState
+    {
+        tutorial,
+        interval,
+        first,
+        second,
+        third,
+        gameEnd
+    }
+
+    public GameState currentState;
 
     // Start is called before the first frame update
     void Start()
@@ -32,7 +52,10 @@ public class PlayerController : MonoBehaviour
         canPaddle = true;
         shoreTime = false;
         paddle.GetComponent<Animator>().enabled = false;
+        convo = gameObject.GetComponent<Flowchart>();
+        currentState = GameState.tutorial;
     }
+
 
     // Update is called once per frame
     void Update()
@@ -46,11 +69,6 @@ public class PlayerController : MonoBehaviour
             InCharacterControls();
         }
 
-        //if (isPaddling)
-        //{
-        //    paddleTime += Time.deltaTime;
-        //}
-
         if (paddleTime > maxPaddleTime)
         {
             if (!shoreTime)
@@ -62,25 +80,36 @@ public class PlayerController : MonoBehaviour
         }
         
         print(paddleTime);
+
+        if (hasTalked && hasPaddled && currentState == GameState.tutorial)
+        {
+            gameManager.GetComponent<SeeingGM>().FirstWaveOfBody();
+            currentState = GameState.first;
+        }
     }
 
     private void InCharacterControls()
     {
         if (canPaddle)
         {
-            if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+            if (Input.GetKeyDown(KeyCode.R) && transform.position.x > -5.5f && transform.position.x < -4.8f)
             {
                 paddle.GetComponent<Animator>().enabled = true;
                 //paddle.GetComponent<Animator>().SetTrigger("paddling");
-                
+
                 isPaddling = true;
             }
 
-            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+            if (Input.GetKey(KeyCode.R) && transform.position.x > -5.5f && transform.position.x < -4.8f)
             {
                 if (isPaddling)
                 {
                     paddleTime += Time.deltaTime;
+                }
+                
+                if (paddleTime > 1f && !hasPaddled)
+                {
+                    hasPaddled = true;
                 }
             }
         }
@@ -90,12 +119,38 @@ public class PlayerController : MonoBehaviour
             isPaddling = false;
         }
         
-        if (Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.RightArrow))
+        if (Input.GetKeyUp(KeyCode.R) || Input.GetKeyUp(KeyCode.RightArrow))
         {
             //paddle.GetComponent<Animator>().SetTrigger("idle");
             paddle.GetComponent<Animator>().enabled = false;
                 
             isPaddling = false;
+        }
+
+        if (hasPaddled && convo.GetVariable<BooleanVariable>("isTalking").Value == false)
+        {
+            if (Input.GetKey(KeyCode.A))
+            {
+                rb.AddForce(Vector3.left * speed);
+            }
+
+            if (Input.GetKey(KeyCode.D))
+            {
+                rb.AddForce(Vector3.right * speed);
+            }
+        }
+        
+        if (canTalk)
+        {
+            if (Input.GetKeyDown(KeyCode.T))
+            {
+                print("nfdsajkf");
+                convo.SendFungusMessage("StartConvo");
+                if (!hasTalked)
+                {
+                    hasTalked = true;
+                }
+            }
         }
     }
 
@@ -148,22 +203,64 @@ public class PlayerController : MonoBehaviour
     {
         if (isInCharacter)
         {
-            UITextIn.SetActive(true);
-            UITextOut.SetActive(false);
+                UITextIn.SetActive(true);
+                UITextOut.SetActive(false);
         }
         else
         {
-            UITextOut.SetActive(true);
-            UITextIn.SetActive(false);
+                UITextOut.SetActive(true);
+                UITextIn.SetActive(false);
         }
 
         gameManager.GetComponent<SeeingGM>().CanChangeStatus("yes");
+
+        if (other.tag == "UI")
+        {
+            if (currentState == GameState.tutorial && !hasPaddled)
+            {
+                UITextIn.GetComponent<TextMeshPro>().text = "[R] to Paddle";
+            }
+            else if (currentState == GameState.tutorial && hasPaddled)
+            {
+                UITextIn.GetComponent<TextMeshPro>().text = "[A][D] to Move";
+            }
+            else if (!hasCollided)
+            {
+                UITextIn.GetComponent<TextMeshPro>().text = "[R] to Paddle";
+            }
+            else if (currentState == GameState.first)
+            {
+                UITextIn.GetComponent<TextMeshPro>().text = "[E]xit Character";
+            }
+            else if (currentState != GameState.tutorial)
+            {
+                UITextIn.GetComponent<TextMeshPro>().text = "[R] or [E]";
+            }
+            
+        }
+
+        if (other.tag == "Girl")
+        {
+            if (!hasTalked)
+            {
+                UITextIn.GetComponent<TextMeshPro>().text = "[T]alk To";
+            }
+            canTalk = true;
+        }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        UITextIn.SetActive(false);
-        UITextOut.SetActive(false);
-        gameManager.GetComponent<SeeingGM>().CanChangeStatus("no");
+        if (other.tag == "UI")
+        {
+            UITextIn.SetActive(false);
+            UITextOut.SetActive(false);
+            gameManager.GetComponent<SeeingGM>().CanChangeStatus("no");
+        }
+
+        if (other.tag == "Girl")
+        {
+            canTalk = false;
+        }
     }
 }
