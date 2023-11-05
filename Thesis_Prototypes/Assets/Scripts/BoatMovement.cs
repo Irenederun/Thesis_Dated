@@ -28,7 +28,8 @@ public class BoatMovement : MonoBehaviour
         if (collision.gameObject.tag == "body")
         {
             gameManager.GetComponent<SeeingGM>().CanMoveBody();
-            
+
+            canShakeScreen = Services.player.isInCharacter;
             if (canShakeScreen)
             {
                 camera2D.GetComponent<CameraShakeScreen>().ShakeScreen();

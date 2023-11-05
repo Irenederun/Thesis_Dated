@@ -11,8 +11,8 @@ public class SeeingGM : MonoBehaviour
     public GameObject inCharacter2D;
     public GameObject outCharacter3D;
     public bool isInCharacter;
-    public GameObject player;
-    private PlayerController playerCtrl;
+    //public GameObject player;
+    //private PlayerController playerCtrl;
     private bool isInsideTrigger;
     public List<GameObject> listOfBodies;
     public float bodySpeed;
@@ -26,14 +26,26 @@ public class SeeingGM : MonoBehaviour
     public GameObject shore;
     public float shoreSpeed;
 
-    private bool canMoveBodies = false;
+    public bool canMoveBodies = false;
     public bool bodyIsOnStage = false;
 
     public Flowchart convo;
 
+    [Space(10f)]
+    public Stage currentStage;
+    public List<Stage> stages;
+
+    private void Awake()
+    {
+        if (Services.seeingGM == null) Services.seeingGM = this;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
+        currentStage.Entrance();
+
+        /*
         isInCharacter = true;
         playerCtrl = player.GetComponent<PlayerController>();
         playerCtrl.ChangeStatus(isInCharacter);
@@ -41,11 +53,13 @@ public class SeeingGM : MonoBehaviour
         isInsideTrigger = true;
         boat.GetComponent<BoatMovement>().TrackCharacterStatus(true);
         convo = player.GetComponent<Flowchart>();
+        */
     }
 
     // Update is called once per frame
     void Update()
     {
+        /*
         if (isInsideTrigger)
         {
             if (Input.GetKeyDown(KeyCode.E))
@@ -64,6 +78,7 @@ public class SeeingGM : MonoBehaviour
                 playerCtrl.ChangeStatus(isInCharacter);
             }
         }
+        */
 
         //if (isInCharacter && listOfBodies.Count > 0)
         //{
@@ -126,7 +141,7 @@ public class SeeingGM : MonoBehaviour
                     //CreateNewBody();
                     print("time for new");
                 }
-                playerCtrl.ChangePaddleStatus(true);
+                Services.player.ChangePaddleStatus(true);
             }
         }
     }
@@ -140,19 +155,21 @@ public class SeeingGM : MonoBehaviour
         listOfBodies.Add(newBody);
     }
 
+    /*
     public void EnterCharacter()
     {
         inCharacter2D.SetActive(true);
-        playerCtrl.backToOriginalPos();
+        Services.player.backToOriginalPos();
         outCharacter3D.SetActive(false);
 
-        if (playerCtrl.currentState != PlayerController.GameState.tutorial)
+        if (Services.player.currentState != Player.GameState.tutorial)
         {
             canMoveBodies = true;
-            playerCtrl.currentState = PlayerController.GameState.interval;
+            Services.player.currentState = Player.GameState.interval;
             StartCoroutine(FirstHitConvo());
         }
     }
+    */
 
     private IEnumerator FirstHitConvo()
     {
@@ -167,11 +184,13 @@ public class SeeingGM : MonoBehaviour
         }
     }
     
+    /*
     public void ExitCharacter()
     {
         outCharacter3D.SetActive(true);
         inCharacter2D.SetActive(false);
     }
+    */
 
     public void CanChangeStatus(string yn)
     {
@@ -197,7 +216,7 @@ public class SeeingGM : MonoBehaviour
 
     public void ShoreMovement()
     {
-        if (playerCtrl.isPaddling)
+        if (Services.player.isPaddling)
         {
             //shore.GetComponent<Rigidbody>().AddForce(Vector3.left * shoreSpeed);
             shore.transform.position += Vector3.left * Time.deltaTime;
