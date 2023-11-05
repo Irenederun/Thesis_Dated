@@ -523,7 +523,6 @@ GameObject:
   - component: {fileID: 267317371}
   - component: {fileID: 267317375}
   - component: {fileID: 267317406}
-  - component: {fileID: 267317376}
   - component: {fileID: 267317377}
   - component: {fileID: 267317378}
   - component: {fileID: 267317379}
@@ -657,30 +656,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
---- !u!114 &267317376
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 267317370}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f9beec0e230ef044ca084601cba3d288, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  UITextIn: {fileID: 442358554}
-  UITextOut: {fileID: 1915085373}
-  isInCharacter: 0
-  speed: 3
-  gameManager: {fileID: 1399040334}
-  paddle: {fileID: 738265418}
-  isPaddling: 0
-  canPaddle: 0
-  maxPaddleTime: 15
-  convo: {fileID: 0}
-  hasCollided: 0
-  currentState: 0
 --- !u!114 &267317377
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -694,7 +669,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 1
-  scrollPos: {x: 27.333344, y: 22.166672}
+  scrollPos: {x: 41.333344, y: 63.16667}
   variablesScrollPos: {x: 0, y: 0}
   variablesExpanded: 1
   blockViewHeight: 335.66666
@@ -706,9 +681,8 @@ MonoBehaviour:
     width: 0
     height: 0
   selectedBlocks:
-  - {fileID: 267317391}
-  selectedCommands:
-  - {fileID: 267317404}
+  - {fileID: 267317378}
+  selectedCommands: []
   variables:
   - {fileID: 267317398}
   description: 
@@ -737,7 +711,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 152
     y: 74
-    width: 108.66667
+    width: 66
     height: 40
   tint: {r: 1, g: 1, b: 1, a: 1}
   useCustomTint: 0
@@ -836,7 +810,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 347.66666
     y: 19.833328
-    width: 142.66666
+    width: 100
     height: 40
   tint: {r: 1, g: 1, b: 1, a: 1}
   useCustomTint: 0
@@ -958,7 +932,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 281.66666
     y: 203.83333
-    width: 111.33333
+    width: 69
     height: 40
   tint: {r: 1, g: 1, b: 1, a: 1}
   useCustomTint: 0
@@ -987,7 +961,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 470.66666
     y: 206.83333
-    width: 126
+    width: 83
     height: 40
   tint: {r: 1, g: 1, b: 1, a: 1}
   useCustomTint: 0
@@ -1070,7 +1044,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 585.6666
     y: 18.833328
-    width: 142
+    width: 99
     height: 40
   tint: {r: 1, g: 1, b: 1, a: 1}
   useCustomTint: 0
@@ -2333,11 +2307,14 @@ MonoBehaviour:
   outCharacter3D: {fileID: 293093476}
   speed: 3
   paddle: {fileID: 738265418}
+  boat: {fileID: 1160838835}
   isPaddling: 0
+  paddleTime: 0
+  canMoveIn2D: 0
+  canTalk: 0
+  canEnterBoat: 0
+  canExitBoat: 0
   canPaddle: 0
-  maxPaddleTime: 15
-  hasCollided: 0
-  currentState: 0
 --- !u!1 &273030783
 GameObject:
   m_ObjectHideFlags: 0
@@ -4292,7 +4269,7 @@ GameObject:
   - component: {fileID: 1160838838}
   m_Layer: 9
   m_Name: Boat
-  m_TagString: Untagged
+  m_TagString: Boat
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4342,8 +4319,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   camera2D: {fileID: 519420028}
-  player: {fileID: 267317370}
-  gameManager: {fileID: 1399040334}
+  blocked: 0
 --- !u!1 &1194945336
 GameObject:
   m_ObjectHideFlags: 0
@@ -4779,23 +4755,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8cfc2fe8bc439544bb54a3c0dca5918, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inCharacter2D: {fileID: 2120503077}
-  outCharacter3D: {fileID: 293093476}
-  isInCharacter: 0
-  listOfBodies:
-  - {fileID: 2080660249}
-  bodySpeed: 1
-  lowerBound: -6.4
-  bodySpawnRangeX: {x: 18, y: 25}
-  bodySpawnRangeZ: {x: 4.98, y: 15.24}
-  bodySpeedRange: {x: 3, y: 3}
-  bodyPrefab: {fileID: 6592915697096007580, guid: 0173e9531c0ae4649af66298650f1b9a, type: 3}
-  boat: {fileID: 1160838835}
-  noMoreSpawning: 0
-  shore: {fileID: 1350958003}
-  shoreSpeed: 30
-  canMoveBodies: 0
-  bodyIsOnStage: 1
   convo: {fileID: 0}
   currentStage: {fileID: 1848767280}
   stages: []
@@ -5435,7 +5394,7 @@ GameObject:
   - component: {fileID: 1639971427}
   - component: {fileID: 1639971426}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: TalkCollider
   m_TagString: Girl
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5976,6 +5935,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a368b992f3f20334bb32d20483e8184c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hasPaddled: 0
+  hasFirstTalked: 0
+  hasHitByBody: 0
+  firstBody: {fileID: 2080660249}
 --- !u!1 &1915085373
 GameObject:
   m_ObjectHideFlags: 0
@@ -6735,10 +6698,6 @@ PrefabInstance:
     - target: {fileID: 6592915697096007576, guid: 0173e9531c0ae4649af66298650f1b9a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
-      objectReference: {fileID: 0}
-    - target: {fileID: 6592915697096007579, guid: 0173e9531c0ae4649af66298650f1b9a, type: 3}
-      propertyPath: m_Mass
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6592915697096007580, guid: 0173e9531c0ae4649af66298650f1b9a, type: 3}
       propertyPath: m_Name

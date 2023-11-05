@@ -8,11 +8,12 @@ using Random = UnityEngine.Random;
 
 public class SeeingGM : MonoBehaviour
 {
-    public GameObject inCharacter2D;
-    public GameObject outCharacter3D;
-    public bool isInCharacter;
+    //public GameObject inCharacter2D;
+    //public GameObject outCharacter3D;
+    //public bool isInCharacter;
     //public GameObject player;
     //private PlayerController playerCtrl;
+    /*
     private bool isInsideTrigger;
     public List<GameObject> listOfBodies;
     public float bodySpeed;
@@ -25,10 +26,13 @@ public class SeeingGM : MonoBehaviour
     public bool noMoreSpawning;
     public GameObject shore;
     public float shoreSpeed;
+    */
 
+    /*
     public bool canMoveBodies = false;
     public bool bodyIsOnStage = false;
-
+    */
+    [Space(10f)]
     public Flowchart convo;
 
     [Space(10f)]
@@ -85,22 +89,28 @@ public class SeeingGM : MonoBehaviour
         //    BodiesMovement();
         //}
 
+        /*
         if (canMoveBodies)
         {
             BodiesMovement();
         }
+        */
 
+        /*
         if (!isInCharacter && listOfBodies.Count > 0)
         {
             RemoveBodies();
         }
-
+        */
+        /*
         if (noMoreSpawning)
         {
             ShoreMovement();
         }
+        */
     }
 
+    /*
     public void BodiesMovement()
     {
         for (int i = listOfBodies.Count - 1; i >= 0; i--)
@@ -154,6 +164,7 @@ public class SeeingGM : MonoBehaviour
             quaternion.Euler(0,0,90));
         listOfBodies.Add(newBody);
     }
+    */
 
     /*
     public void EnterCharacter()
@@ -171,6 +182,7 @@ public class SeeingGM : MonoBehaviour
     }
     */
 
+    /*
     private IEnumerator FirstHitConvo()
     {
         yield return new WaitForSeconds(1);
@@ -183,6 +195,7 @@ public class SeeingGM : MonoBehaviour
             convo.SendFungusMessage("OffStage");
         }
     }
+    */
     
     /*
     public void ExitCharacter()
@@ -192,6 +205,7 @@ public class SeeingGM : MonoBehaviour
     }
     */
 
+        /*
     public void CanChangeStatus(string yn)
     {
         switch (yn)
@@ -207,7 +221,9 @@ public class SeeingGM : MonoBehaviour
                 break;
         }
     }
+    */
 
+        /*
     public void GetTheShore()
     {
         shore.SetActive(true);
@@ -222,7 +238,9 @@ public class SeeingGM : MonoBehaviour
             shore.transform.position += Vector3.left * Time.deltaTime;
         }
     }
+    */
 
+    /*
     public void FirstWaveOfBody()
     {
         foreach (GameObject body in listOfBodies)
@@ -235,9 +253,12 @@ public class SeeingGM : MonoBehaviour
             }
         }
     }
+    */
 
+    /*
     public void CanMoveBody()
     {
         canMoveBodies = false;
     }
+    */
 }

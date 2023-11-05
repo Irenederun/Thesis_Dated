@@ -5,52 +5,130 @@ using Fungus;
 
 public class StageTut : Stage
 {
-    private Flowchart convo;
+    // sequence flags
+    [Header("sequence flags")]
+    public bool hasPaddled;
+    public bool hasFirstTalked;
+    public bool hasHitByBody;
 
-    private bool hasTalked;
+    // body related
+    [Header("bodyyyy")]
+    public GameObject firstBody;
+
+    // private fields
+    private Flowchart convo;
+    private bool countingPaddleTime;
+    private float paddleTime;
+    private bool isOutOfBound;
 
     private void Update()
     {
-        
+        if (countingPaddleTime)
+        {
+            paddleTime += Time.deltaTime;
+            if (paddleTime > 1f && !hasPaddled)
+            {
+                hasPaddled = true;
+                Services.player.canMoveIn2D = true;
+                Services.player.canTalk = true;
+            }
+        }
+
     }
 
     public override void Entrance()
     {
-        Services.player.EnterCharacter();
-
         convo = Services.player.GetComponent<Flowchart>();
-        Services.player.onTalk += checkStartConvo;
+
+        // subscribe to events
+        Services.player.onStartPaddle += startCountPaddleTime;
+        Services.player.onStopPaddle += stopCountPaddleTime;
+        Services.player.onTalk += startConvo;
         Services.player.onEnterBoat += checkFirstHitConvo;
-        /*
-        Services.seeingGM.isInCharacter = true;
-        playerCtrl = player.GetComponent<PlayerController>();
-        playerCtrl.ChangeStatus(isInCharacter);
-        EnterCharacter();
-        isInsideTrigger = true;
-        boat.GetComponent<BoatMovement>().TrackCharacterStatus(true);
-        */
+
+        // initial setting
+        Services.player.canPaddle = true;
+        Services.player.canMoveIn2D = false;
+        Services.player.canTalk = false;
+
+        // starts in character
+        Services.player.EnterCharacter();
     }
 
     public override void Exit()
     {
-        throw new System.NotImplementedException();
+        Services.player.onStartPaddle -= startCountPaddleTime;
+        Services.player.onStopPaddle -= stopCountPaddleTime;
+        Services.player.onTalk -= startConvo;
+        Services.player.onEnterBoat -= checkFirstHitConvo;
     }
 
-    private void checkStartConvo()
+    public override void Pause()
     {
-        if (!hasTalked)
+        if (firstBody != null) firstBody.GetComponent<Body>().StopMoving();
+    }
+
+    public override void Resume()
+    {
+        if (firstBody != null) firstBody.GetComponent<Body>().StartMoving();
+    }
+
+    public override void HandleOutOfBoundBody(GameObject outOfBoundBody)
+    {
+        if (outOfBoundBody == firstBody)
         {
-            convo.SendFungusMessage("StartConvo");
-            hasTalked = true;
+            isOutOfBound = true;
+            Destroy(outOfBoundBody);
+            firstBody = null;
         }
+    }
+
+    public override void HandleHit(GameObject hitBy)
+    {
+        if (hitBy == firstBody)
+        {
+            hasHitByBody = true;
+
+            Services.player.canEnterBoat = true;
+            Services.player.canExitBoat = true;
+        }
+    }
+
+    private void startCountPaddleTime()
+    {
+        countingPaddleTime = true;
+    }
+
+    private void stopCountPaddleTime()
+    {
+        countingPaddleTime = false;
+    }
+
+    private void startConvo(GameObject target)
+    {
+        if (target.tag == "Girl")
+        {
+            if (!hasFirstTalked)
+            {
+                convo.SendFungusMessage("StartConvo");
+                hasFirstTalked = true;
+
+                sendFirstBody();
+            }
+        }
+    }
+
+    private void sendFirstBody()
+    {
+        firstBody.SetActive(true);
+        firstBody.GetComponent<Body>().StartMoving();
+        firstBody.GetComponent<Body>().stage = this;
     }
 
     private void checkFirstHitConvo()
     {
-        if (Services.player.currentState != Player.GameState.tutorial)
+        if (hasHitByBody)
         {
-            Services.seeingGM.canMoveBodies = true;
-            Services.player.currentState = Player.GameState.interval;
             StartCoroutine(FirstHitConvo());
         }
     }
@@ -58,9 +136,8 @@ public class StageTut : Stage
     private IEnumerator FirstHitConvo()
     {
         yield return new WaitForSeconds(1);
-        //TODO: deal with bodyIsOnStage
-        /*
-        if (bodyIsOnStage)
+
+        if (!isOutOfBound)
         {
             convo.SendFungusMessage("OnStage");
         }
@@ -68,6 +145,5 @@ public class StageTut : Stage
         {
             convo.SendFungusMessage("OffStage");
         }
-        */
-    }
+    }    
 }

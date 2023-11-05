@@ -10,45 +10,52 @@ using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
+    // ui? TODO: probably gonna separate this out
+    [Header("UI")]
     public GameObject UITextIn;
     public GameObject UITextOut;
+
+    // in/out character
+    [Header("Character State")]
     public bool isInCharacter;
     public GameObject inCharacter2D;
     public GameObject outCharacter3D;
+
+    // character properties
+    [Header("Character Properties")]
     private Rigidbody rb;
     public float speed = 2;
     private Vector3 initialPosPlayer;
+
+    // paddle related
+    [Header("Paddle Related")]
     public GameObject paddle;
+    public GameObject boat;
     public bool isPaddling;
+    public float paddleTime;
+
+    // action flags
+    [Header("Action Flags")]
+    public bool canMoveIn2D;
+    public bool canTalk;
+    public bool canEnterBoat;
+    public bool canExitBoat;
     public bool canPaddle;
-    private float paddleTime;
-    public float maxPaddleTime = 3;
-    private bool shoreTime;
-    private bool canTalk;
-
-    public bool hasCollided = false;
-    private bool hasPaddled = false;
-    private bool hasTalked = false;
-
+    
+    // private fields
     private Flowchart convo;
     private bool isInsideTrigger;
+    private GameObject talkTarget;
 
+    // events
     public delegate void Notify();
     public event Notify onEnterBoat;
     public event Notify onExitBoat;
-    public event Notify onTalk;
+    public event Notify onStartPaddle;
+    public event Notify onStopPaddle;
 
-    public enum GameState
-    {
-        tutorial,
-        interval,
-        first,
-        second,
-        third,
-        gameEnd
-    }
-
-    public GameState currentState;
+    public delegate void TargetedNotify(GameObject target);
+    public event TargetedNotify onTalk;
 
     private void Awake()
     {
@@ -61,18 +68,16 @@ public class Player : MonoBehaviour
         rb = gameObject.GetComponent<Rigidbody>();
         initialPosPlayer = transform.position;
         isPaddling = false;
-        canPaddle = true;
-        shoreTime = false;
+        canPaddle = false;
         paddle.GetComponent<Animator>().enabled = false;
         convo = gameObject.GetComponent<Flowchart>();
-        currentState = GameState.tutorial;
     }
 
 
     // Update is called once per frame
     void Update()
     {
-        SwitchInOutControls();
+        if (isInsideTrigger) SwitchInOutControls();
 
         if (!isInCharacter)
         {
@@ -83,23 +88,6 @@ public class Player : MonoBehaviour
             InCharacterControls();
         }
 
-        if (paddleTime > maxPaddleTime)
-        {
-            if (!shoreTime)
-            {
-                shoreTime = true;
-                print("get to the shore");
-                Services.seeingGM.GetTheShore();
-            }
-        }
-
-        print(paddleTime);
-
-        if (hasTalked && hasPaddled && currentState == GameState.tutorial)
-        {
-            Services.seeingGM.FirstWaveOfBody();
-            currentState = GameState.first;
-        }
     }
 
     public void EnterCharacter()
@@ -109,75 +97,76 @@ public class Player : MonoBehaviour
         inCharacter2D.SetActive(true);
         outCharacter3D.SetActive(false);
         backToOriginalPos();
+
+        Services.seeingGM.currentStage.Resume();
     }
 
     public void ExitCharacter()
     {
+        isInCharacter = false;
+
         inCharacter2D.SetActive(false);
         outCharacter3D.SetActive(true);
+
+        Services.seeingGM.currentStage.Pause();
     }
 
     private void SwitchInOutControls()
     {
-        if (isInsideTrigger)
+        if (Input.GetKeyDown(KeyCode.E))
         {
-            if (Input.GetKeyDown(KeyCode.E))
+            if (isInCharacter && canExitBoat)
             {
-                if (isInCharacter)
-                {
-                    ExitCharacter();
-                    onExitBoat?.Invoke();
-                }
-                else
-                {
-                    EnterCharacter();
-                    onEnterBoat?.Invoke();
-                }
-                isInCharacter = !isInCharacter;
+                ExitCharacter();
+                onExitBoat?.Invoke();
+            }
+            else if (!isInCharacter && canEnterBoat)
+            {
+                EnterCharacter();
+                onEnterBoat?.Invoke();
             }
         }
     }
 
     private void InCharacterControls()
     {
-        if (canPaddle)
+        if (canPaddle && !boat.GetComponent<BoatMovement>().blocked)
         {
             if (Input.GetKeyDown(KeyCode.R) && transform.position.x > -5.5f && transform.position.x < -4.8f)
             {
-                paddle.GetComponent<Animator>().enabled = true;
                 //paddle.GetComponent<Animator>().SetTrigger("paddling");
+                paddle.GetComponent<Animator>().enabled = true;
 
                 isPaddling = true;
+                onStartPaddle?.Invoke();
             }
 
-            if (Input.GetKey(KeyCode.R) && transform.position.x > -5.5f && transform.position.x < -4.8f)
+            if (isPaddling)
             {
-                if (isPaddling)
-                {
-                    paddleTime += Time.deltaTime;
-                }
+                paddleTime += Time.deltaTime;
+            }
 
-                if (paddleTime > 1f && !hasPaddled)
-                {
-                    hasPaddled = true;
-                }
+            if (Input.GetKeyUp(KeyCode.R))
+            {
+                //paddle.GetComponent<Animator>().SetTrigger("idle");
+                paddle.GetComponent<Animator>().enabled = false;
+
+                isPaddling = false;
+                onStopPaddle?.Invoke();
             }
         }
-        else
+        else // when canPaddle gets set to false while paddling
         {
-            paddle.GetComponent<Animator>().enabled = false;
-            isPaddling = false;
+            if (isPaddling)
+            {
+                paddle.GetComponent<Animator>().enabled = false;
+                isPaddling = false;
+                onStopPaddle?.Invoke();
+            }
         }
 
-        if (Input.GetKeyUp(KeyCode.R) || Input.GetKeyUp(KeyCode.RightArrow))
-        {
-            //paddle.GetComponent<Animator>().SetTrigger("idle");
-            paddle.GetComponent<Animator>().enabled = false;
 
-            isPaddling = false;
-        }
-
-        if (hasPaddled && convo.GetVariable<BooleanVariable>("isTalking").Value == false)
+        if (canMoveIn2D && convo.GetVariable<BooleanVariable>("isTalking").Value == false)
         {
             if (Input.GetKey(KeyCode.A))
             {
@@ -195,7 +184,7 @@ public class Player : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.T))
             {
                 print("nfdsajkf");
-                onTalk?.Invoke();
+                onTalk?.Invoke(talkTarget);
                 /*
                 convo.SendFungusMessage("StartConvo");
                 if (!hasTalked)
@@ -254,6 +243,7 @@ public class Player : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
+        print(isInCharacter);
         if (isInCharacter)
         {
             UITextIn.SetActive(true);
@@ -266,10 +256,13 @@ public class Player : MonoBehaviour
         }
 
         //Services.seeingGM.CanChangeStatus("yes");
-        isInsideTrigger = true;
 
+        
         if (other.tag == "UI")
         {
+            isInsideTrigger = true;
+            //TODO: tutorial UI stuff, should be decoupled from player
+            /*
             if (currentState == GameState.tutorial && !hasPaddled)
             {
                 UITextIn.GetComponent<TextMeshPro>().text = "[R] to Paddle";
@@ -290,16 +283,20 @@ public class Player : MonoBehaviour
             {
                 UITextIn.GetComponent<TextMeshPro>().text = "[R] or [E]";
             }
-
+            */
         }
 
         if (other.tag == "Girl")
         {
+            /*
             if (!hasTalked)
             {
                 UITextIn.GetComponent<TextMeshPro>().text = "[T]alk To";
             }
-            canTalk = true;
+            */
+
+            //canTalk = true;
+            if (talkTarget != other.gameObject) talkTarget = other.gameObject;
         }
     }
 
@@ -307,6 +304,7 @@ public class Player : MonoBehaviour
     {
         if (other.tag == "UI")
         {
+            print("exited trigger");
             UITextIn.SetActive(false);
             UITextOut.SetActive(false);
             //Services.seeingGM.CanChangeStatus("no");
@@ -315,7 +313,8 @@ public class Player : MonoBehaviour
 
         if (other.tag == "Girl")
         {
-            canTalk = false;
+            //canTalk = false;
+            if (talkTarget == other.gameObject) talkTarget = null;
         }
     }
 }
