@@ -7,8 +7,7 @@ using UnityEngine;
 public class BoatMovement : MonoBehaviour
 {
     public GameObject camera2D;
-    public GameObject player;
-    public GameObject gameManager;
+    public bool blocked;
     private bool canShakeScreen;
 
     // Start is called before the first frame update
@@ -27,17 +26,15 @@ public class BoatMovement : MonoBehaviour
     {
         if (collision.gameObject.tag == "body")
         {
-            gameManager.GetComponent<SeeingGM>().CanMoveBody();
-            
+            //gameManager.GetComponent<SeeingGM>().CanMoveBody();
+            collision.gameObject.GetComponent<Body>().StopMoving();
+
+            blocked = true;
+            canShakeScreen = Services.player.isInCharacter;
             if (canShakeScreen)
             {
                 camera2D.GetComponent<CameraShakeScreen>().ShakeScreen();
-                player.GetComponent<PlayerController>().ChangePaddleStatus(false);
-            }
-
-            if (!player.GetComponent<PlayerController>().hasCollided)
-            {
-                player.GetComponent<PlayerController>().hasCollided = true;
+                //Services.player.ChangePaddleStatus(false);
             }
         }
         
@@ -47,7 +44,8 @@ public class BoatMovement : MonoBehaviour
     {
         if (other.gameObject.tag == "body")
         {
-            player.GetComponent<PlayerController>().ChangePaddleStatus(true);
+            //Services.player.ChangePaddleStatus(true);
+            blocked = false;
         }
     }
 
