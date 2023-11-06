@@ -24,8 +24,10 @@ public class Player : MonoBehaviour
     // character properties
     [Header("Character Properties")]
     private Rigidbody rb;
-    public float speed = 2;
+    public float accel = 10f;
+    public float maxSpeed = 3f;
     private Vector3 initialPosPlayer;
+    public bool isInsideTrigger;
 
     // paddle related
     [Header("Paddle Related")]
@@ -34,9 +36,15 @@ public class Player : MonoBehaviour
     public bool isPaddling;
     public float paddleTime;
 
+    // talking related
+    [Header("Talking Related")]
+    public GameObject talkTarget;
     // action flags
+    // **ideally only be modified by Stages and GameManagers
+    // **avoid including these in other logics; instead use separate booleans
     [Header("Action Flags")]
     public bool canMoveIn2D;
+    public bool canMoveIn3D;
     public bool canTalk;
     public bool canEnterBoat;
     public bool canExitBoat;
@@ -44,8 +52,6 @@ public class Player : MonoBehaviour
     
     // private fields
     private Flowchart convo;
-    private bool isInsideTrigger;
-    private GameObject talkTarget;
 
     // events
     public delegate void Notify();
@@ -53,6 +59,8 @@ public class Player : MonoBehaviour
     public event Notify onExitBoat;
     public event Notify onStartPaddle;
     public event Notify onStopPaddle;
+    public event Notify onMove2D;
+    public event Notify onMove3D;
 
     public delegate void TargetedNotify(GameObject target);
     public event TargetedNotify onTalk;
@@ -62,7 +70,6 @@ public class Player : MonoBehaviour
         Services.player = this;
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         rb = gameObject.GetComponent<Rigidbody>();
@@ -73,8 +80,6 @@ public class Player : MonoBehaviour
         convo = gameObject.GetComponent<Flowchart>();
     }
 
-
-    // Update is called once per frame
     void Update()
     {
         if (isInsideTrigger) SwitchInOutControls();
@@ -90,6 +95,18 @@ public class Player : MonoBehaviour
 
     }
 
+    private void FixedUpdate()
+    {
+        if (!isInCharacter)
+        {
+            OutCharacterControlsPhysics();
+        }
+        else
+        {
+            InCharacterControlsPhysics();
+        }
+    }
+
     public void EnterCharacter()
     {
         isInCharacter = true;
@@ -99,6 +116,7 @@ public class Player : MonoBehaviour
         backToOriginalPos();
 
         Services.seeingGM.currentStage.Resume();
+        Services.uiManager.ShowInCharacterUI();
     }
 
     public void ExitCharacter()
@@ -109,6 +127,7 @@ public class Player : MonoBehaviour
         outCharacter3D.SetActive(true);
 
         Services.seeingGM.currentStage.Pause();
+        Services.uiManager.ShowOutCharacterUI();
     }
 
     private void SwitchInOutControls()
@@ -130,11 +149,11 @@ public class Player : MonoBehaviour
 
     private void InCharacterControls()
     {
+        // paddling
         if (canPaddle && !boat.GetComponent<BoatMovement>().blocked)
         {
             if (Input.GetKeyDown(KeyCode.R) && transform.position.x > -5.5f && transform.position.x < -4.8f)
             {
-                //paddle.GetComponent<Animator>().SetTrigger("paddling");
                 paddle.GetComponent<Animator>().enabled = true;
 
                 isPaddling = true;
@@ -148,7 +167,6 @@ public class Player : MonoBehaviour
 
             if (Input.GetKeyUp(KeyCode.R))
             {
-                //paddle.GetComponent<Animator>().SetTrigger("idle");
                 paddle.GetComponent<Animator>().enabled = false;
 
                 isPaddling = false;
@@ -166,34 +184,35 @@ public class Player : MonoBehaviour
         }
 
 
-        if (canMoveIn2D && convo.GetVariable<BooleanVariable>("isTalking").Value == false)
-        {
-            if (Input.GetKey(KeyCode.A))
-            {
-                rb.AddForce(Vector3.left * speed);
-            }
-
-            if (Input.GetKey(KeyCode.D))
-            {
-                rb.AddForce(Vector3.right * speed);
-            }
-        }
-
+        // talking on boat
         if (canTalk)
         {
             if (Input.GetKeyDown(KeyCode.T))
             {
                 print("nfdsajkf");
                 onTalk?.Invoke(talkTarget);
-                /*
-                convo.SendFungusMessage("StartConvo");
-                if (!hasTalked)
-                {
-                    hasTalked = true;
-                }
-                */
             }
         }
+    }
+
+    private void InCharacterControlsPhysics()
+    {
+        // moving on boat
+        if (canMoveIn2D && convo.GetVariable<BooleanVariable>("isTalking").Value == false)
+        {
+            if (Input.GetKey(KeyCode.A))
+            {
+                rb.AddForce(Vector3.left * accel);
+                onMove2D?.Invoke();
+            }
+
+            if (Input.GetKey(KeyCode.D))
+            {
+                rb.AddForce(Vector3.right * accel);
+                onMove2D?.Invoke();
+            }
+        }
+
     }
 
     public void ChangePaddleStatus(bool canornot)
@@ -203,32 +222,49 @@ public class Player : MonoBehaviour
 
     private void OutCharacterControls()
     {
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+
+    }
+
+    private void OutCharacterControlsPhysics()
+    {
+        // moving when out of character
+        if (canMoveIn3D)
         {
-            rb.AddForce(Vector3.right * speed);
+            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+            {
+                rb.AddForce(Vector3.right * accel);
+                onMove3D?.Invoke();
+            }
+
+            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+            {
+                rb.AddForce(Vector3.left * accel);
+                onMove3D?.Invoke();
+            }
+
+            if (Input.GetKey(KeyCode.Space))
+            {
+                rb.AddForce(Vector3.up * accel);
+                onMove3D?.Invoke();
+            }
+
+            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
+            {
+                rb.AddForce(Vector3.forward * accel);
+                onMove3D?.Invoke();
+            }
+
+            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
+            {
+                rb.AddForce(Vector3.back * accel);
+                onMove3D?.Invoke();
+            }
         }
 
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+        if (rb.velocity.magnitude > maxSpeed)
         {
-            rb.AddForce(Vector3.left * speed);
+            rb.velocity = rb.velocity.normalized * maxSpeed;
         }
-
-        if (Input.GetKey(KeyCode.Space))
-        {
-            rb.AddForce(Vector3.up * speed);
-        }
-
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
-        {
-            rb.AddForce(Vector3.forward * speed);
-        }
-
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-        {
-            rb.AddForce(Vector3.back * speed);
-        }
-
-        rb.velocity *= 0.99f;
     }
 
     public void backToOriginalPos()
@@ -241,9 +277,25 @@ public class Player : MonoBehaviour
         isInCharacter = status;
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Girl")
+        {
+            /*
+            if (!hasTalked)
+            {
+                UITextIn.GetComponent<TextMeshPro>().text = "[T]alk To";
+            }
+            */
+
+            //canTalk = true;
+            if (talkTarget != other.gameObject) talkTarget = other.gameObject;
+        }
+    }
+
     private void OnTriggerStay(Collider other)
     {
-        print(isInCharacter);
+        /*
         if (isInCharacter)
         {
             UITextIn.SetActive(true);
@@ -254,10 +306,7 @@ public class Player : MonoBehaviour
             UITextOut.SetActive(true);
             UITextIn.SetActive(false);
         }
-
-        //Services.seeingGM.CanChangeStatus("yes");
-
-        
+        */
         if (other.tag == "UI")
         {
             isInsideTrigger = true;
@@ -285,35 +334,21 @@ public class Player : MonoBehaviour
             }
             */
         }
-
-        if (other.tag == "Girl")
-        {
-            /*
-            if (!hasTalked)
-            {
-                UITextIn.GetComponent<TextMeshPro>().text = "[T]alk To";
-            }
-            */
-
-            //canTalk = true;
-            if (talkTarget != other.gameObject) talkTarget = other.gameObject;
-        }
     }
 
     private void OnTriggerExit(Collider other)
     {
+        
         if (other.tag == "UI")
         {
             print("exited trigger");
-            UITextIn.SetActive(false);
-            UITextOut.SetActive(false);
-            //Services.seeingGM.CanChangeStatus("no");
+            //UITextIn.SetActive(false);
+            //UITextOut.SetActive(false);
             isInsideTrigger = false;
         }
 
         if (other.tag == "Girl")
         {
-            //canTalk = false;
             if (talkTarget == other.gameObject) talkTarget = null;
         }
     }

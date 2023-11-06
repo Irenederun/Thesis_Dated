@@ -8,6 +8,7 @@ TagManager:
   - UI
   - Girl
   - Boat
+  - player
   layers:
   - Default
   - TransparentFX

@@ -5,7 +5,8 @@ using UnityEngine;
 public class Body : MonoBehaviour
 {
     public Vector2 speedRange;
-    public float lowerBound;
+    public Vector2 boatBound;
+    public float deathBound;
     public Stage stage;
 
     private float speed;
@@ -24,7 +25,7 @@ public class Body : MonoBehaviour
             transform.position += Vector3.left * speed * Time.deltaTime;
         }
 
-        if (transform.position.y < lowerBound)
+        if (transform.position.y < deathBound)
         {
             stage.HandleOutOfBoundBody(this.gameObject);
         }
@@ -47,5 +48,10 @@ public class Body : MonoBehaviour
             // hit boat
             stage.HandleHit(this.gameObject);
         }
+    }
+
+    public bool willHitBoat()
+    {
+        return transform.position.z > boatBound.x && transform.position.z < boatBound.y;
     }
 }

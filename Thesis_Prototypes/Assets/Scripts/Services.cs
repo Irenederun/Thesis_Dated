@@ -5,5 +5,6 @@ using UnityEngine;
 public static class Services
 {
     public static Player player;
+    public static UIManager uiManager;
     public static SeeingGM seeingGM;
 }
