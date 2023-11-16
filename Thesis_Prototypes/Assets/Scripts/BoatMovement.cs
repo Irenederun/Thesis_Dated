@@ -1,7 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class BoatMovement : MonoBehaviour
@@ -15,13 +11,6 @@ public class BoatMovement : MonoBehaviour
     {
         canShakeScreen = true;
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag == "body")

@@ -1,10 +1,6 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using Fungus;
-using Unity.Mathematics;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 public class SeeingGM : MonoBehaviour
 {
@@ -23,10 +19,5 @@ public class SeeingGM : MonoBehaviour
     void Start()
     {
         currentStage.Entrance();
-    }
-
-    void Update()
-    {
-
     }
 }
